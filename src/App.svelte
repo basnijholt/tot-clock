@@ -111,12 +111,8 @@
   ontouchend={handleDoubleTap}
   role="application"
 >
-  <!-- Floating shapes -->
-  <div class="floating-shapes">
-    <div class="floating-shape"></div>
-    <div class="floating-shape"></div>
-    <div class="floating-shape"></div>
-  </div>
+  <!-- Animated gradient background -->
+  <div class="animated-gradient"></div>
 
   <!-- Transition overlay -->
   <Transition visible={showTransition} />
@@ -202,61 +198,34 @@
     z-index: 2;
   }
 
-  .floating-shapes {
+  .animated-gradient {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    overflow: hidden;
     pointer-events: none;
     z-index: 1;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(0, 0, 0, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 40% 60%, rgba(255, 255, 255, 0.1) 0%, transparent 40%);
+    background-size: 200% 200%, 200% 200%, 150% 150%;
+    animation: gradient-shift 20s ease-in-out infinite;
   }
 
-  .floating-shape {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    animation: float 20s infinite ease-in-out;
-  }
-
-  .floating-shape:nth-child(1) {
-    width: 300px;
-    height: 300px;
-    top: -150px;
-    right: -100px;
-    animation-delay: 0s;
-  }
-
-  .floating-shape:nth-child(2) {
-    width: 200px;
-    height: 200px;
-    bottom: -100px;
-    left: -50px;
-    animation-delay: -5s;
-  }
-
-  .floating-shape:nth-child(3) {
-    width: 150px;
-    height: 150px;
-    top: 50%;
-    right: -75px;
-    animation-delay: -10s;
-  }
-
-  @keyframes float {
-    0%,
-    100% {
-      transform: translate(0, 0) rotate(0deg);
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 0%, 100% 100%, 50% 50%;
     }
     25% {
-      transform: translate(-20px, 20px) rotate(5deg);
+      background-position: 50% 0%, 50% 100%, 0% 50%;
     }
     50% {
-      transform: translate(0, 40px) rotate(0deg);
+      background-position: 100% 50%, 0% 50%, 100% 0%;
     }
     75% {
-      transform: translate(20px, 20px) rotate(-5deg);
+      background-position: 50% 100%, 50% 0%, 50% 100%;
     }
   }
 
