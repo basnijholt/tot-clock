@@ -2,20 +2,25 @@
   interface Props {
     progress: number;
     timeDisplay: string;
-    color: string;
+    minutesLeft: number;
   }
 
-  let { progress, timeDisplay, color }: Props = $props();
+  let { progress, timeDisplay, minutesLeft }: Props = $props();
 
   const CLOCK_CENTER = 110;
-  const CLOCK_RADIUS = 88;
+  const CLOCK_RADIUS = 90;
+
+  // Use dark text when wedge is small (less than 30% coverage in center area)
+  let useDarkText = $derived(progress < 0.3);
 
   function calculateWedgePath(prog: number): string {
     if (prog <= 0) return '';
     if (prog >= 1) {
+      // Full circle
       return `M ${CLOCK_CENTER} ${CLOCK_CENTER} L ${CLOCK_CENTER} ${CLOCK_CENTER - CLOCK_RADIUS} A ${CLOCK_RADIUS} ${CLOCK_RADIUS} 0 1 1 ${CLOCK_CENTER - 0.01} ${CLOCK_CENTER - CLOCK_RADIUS} Z`;
     }
 
+    // Wedge starts at 12 o'clock and goes clockwise
     const angle = prog * 360;
     const radians = (angle - 90) * (Math.PI / 180);
     const x = CLOCK_CENTER + CLOCK_RADIUS * Math.cos(radians);
@@ -29,151 +34,129 @@
 <div class="clock-container">
   <svg class="clock" viewBox="0 0 220 220">
     <defs>
-      <linearGradient id="clockGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-        <stop offset="100%" style="stop-color:#f1f5f9;stop-opacity:1" />
-      </linearGradient>
-
-      <linearGradient id="centerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-        <stop offset="100%" style="stop-color:#e2e8f0;stop-opacity:1" />
-      </linearGradient>
-
-      <radialGradient id="innerShadow" cx="50%" cy="0%" r="100%">
-        <stop offset="0%" style="stop-color:#000000;stop-opacity:0.03" />
-        <stop offset="100%" style="stop-color:#000000;stop-opacity:0" />
-      </radialGradient>
-
       <filter id="clockShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.25" />
+        <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3" />
+      </filter>
+      <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.5" />
       </filter>
     </defs>
 
-    <!-- Outer ring -->
-    <circle cx="110" cy="110" r="105" fill="#ffffff" filter="url(#clockShadow)" />
-    <circle cx="110" cy="110" r="105" class="clock-rim" />
+    <!-- Outer ring / border -->
+    <circle cx="110" cy="110" r="105" fill="#5a8cc8" />
 
-    <!-- Clock face -->
-    <circle cx="110" cy="110" r="100" fill="url(#clockGradient)" />
-    <circle cx="110" cy="110" r="100" fill="url(#innerShadow)" />
-
-    <!-- Progress ring background -->
-    <circle cx="110" cy="110" r="92" class="progress-ring-bg" />
+    <!-- White clock face -->
+    <circle cx="110" cy="110" r="98" fill="#ffffff" filter="url(#clockShadow)" />
 
     <!-- Tick marks -->
     <g class="tick-marks">
-      <line x1="110" y1="18" x2="110" y2="30" class="tick major" />
-      <line x1="156" y1="26" x2="151" y2="36" class="tick" />
-      <line x1="192" y1="64" x2="182" y2="70" class="tick" />
-      <line x1="202" y1="110" x2="190" y2="110" class="tick major" />
-      <line x1="192" y1="156" x2="182" y2="150" class="tick" />
-      <line x1="156" y1="194" x2="151" y2="184" class="tick" />
-      <line x1="110" y1="202" x2="110" y2="190" class="tick major" />
-      <line x1="64" y1="194" x2="69" y2="184" class="tick" />
-      <line x1="28" y1="156" x2="38" y2="150" class="tick" />
-      <line x1="18" y1="110" x2="30" y2="110" class="tick major" />
-      <line x1="28" y1="64" x2="38" y2="70" class="tick" />
-      <line x1="64" y1="26" x2="69" y2="36" class="tick" />
+      {#each Array(12) as _, i}
+        {@const angle = (i * 30 - 90) * (Math.PI / 180)}
+        {@const innerR = i % 3 === 0 ? 82 : 86}
+        {@const outerR = 92}
+        {@const x1 = CLOCK_CENTER + innerR * Math.cos(angle)}
+        {@const y1 = CLOCK_CENTER + innerR * Math.sin(angle)}
+        {@const x2 = CLOCK_CENTER + outerR * Math.cos(angle)}
+        {@const y2 = CLOCK_CENTER + outerR * Math.sin(angle)}
+        <line
+          {x1}
+          {y1}
+          {x2}
+          {y2}
+          class="tick"
+          class:major={i % 3 === 0}
+        />
+      {/each}
     </g>
 
     <!-- 12 marker -->
-    <text x="110" y="48" class="clock-12">12</text>
+    <text x="110" y="38" class="clock-12">12</text>
 
-    <!-- Countdown wedge -->
+    <!-- Countdown wedge (dark blue, filled sector) -->
     <path
       d={calculateWedgePath(progress)}
       class="countdown-wedge"
-      style="color: {color}"
     />
 
-    <!-- Center circle -->
-    <circle cx="110" cy="110" r="55" fill="url(#centerGradient)" class="clock-center" />
-    <circle cx="110" cy="110" r="55" class="clock-center-ring" />
-
-    <!-- Time display -->
-    <text x="110" y="118" class="time-display">{timeDisplay}</text>
+    <!-- Time display (on top of wedge) -->
+    <text
+      x="110"
+      y="105"
+      class="time-display"
+      class:dark={useDarkText}
+      filter={useDarkText ? '' : 'url(#textShadow)'}
+    >{timeDisplay}</text>
+    <text
+      x="110"
+      y="130"
+      class="time-subtext"
+      class:dark={useDarkText}
+    >{minutesLeft} min left</text>
   </svg>
 </div>
 
 <style>
   .clock-container {
-    width: min(75vw, 55vh);
-    max-width: 420px;
+    width: min(70vw, 50vh);
+    max-width: 380px;
     position: relative;
-  }
-
-  .clock-container::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 110%;
-    height: 110%;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
-    pointer-events: none;
   }
 
   .clock {
     width: 100%;
     height: auto;
-    filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.3));
-    position: relative;
-  }
-
-  .clock-rim {
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.8);
-    stroke-width: 4;
-  }
-
-  .progress-ring-bg {
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.2);
-    stroke-width: 6;
+    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.25));
   }
 
   .tick {
-    stroke: #cbd5e1;
+    stroke: #c0d4e8;
     stroke-width: 2;
     stroke-linecap: round;
   }
 
   .tick.major {
-    stroke: #64748b;
+    stroke: #7ba3cc;
     stroke-width: 3;
   }
 
   .clock-12 {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
-    fill: #475569;
+    fill: #5a7a9a;
     text-anchor: middle;
   }
 
   .countdown-wedge {
-    fill: currentColor;
-    opacity: 0.85;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-    transition: d 0.1s linear;
-  }
-
-  .clock-center {
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
-  }
-
-  .clock-center-ring {
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.5);
-    stroke-width: 2;
+    fill: #3d5a7a;
+    opacity: 0.9;
+    transition: d 0.3s ease-out;
   }
 
   .time-display {
-    font-size: 32px;
+    font-size: 42px;
     font-weight: 800;
-    fill: #1e293b;
+    fill: #ffffff;
     text-anchor: middle;
     dominant-baseline: middle;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    transition: fill 0.3s ease;
+  }
+
+  .time-display.dark {
+    fill: #3d5a7a;
+  }
+
+  .time-subtext {
+    font-size: 16px;
+    font-weight: 600;
+    fill: #ffffff;
+    text-anchor: middle;
+    opacity: 0.95;
+    transition: fill 0.3s ease, opacity 0.3s ease;
+  }
+
+  .time-subtext.dark {
+    fill: #5a7a9a;
+    opacity: 0.8;
   }
 </style>

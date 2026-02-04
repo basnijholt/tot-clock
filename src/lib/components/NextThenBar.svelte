@@ -3,128 +3,79 @@
 
   interface Props {
     next: (Activity & { duration: number }) | null;
-    then: (Activity & { duration: number }) | null;
   }
 
-  let { next, then }: Props = $props();
+  let { next }: Props = $props();
 </script>
 
-<div class="next-then-bar">
-  <div
-    class="block next-block"
-    class:empty={!next}
-    style="background: {next?.gradient || 'rgba(0,0,0,0.3)'}"
-  >
-    {#if next}
-      <div class="block-content">
-        <span class="block-label">NEXT</span>
-        <span class="block-icon">{next.icon}</span>
-        <span class="block-name">{next.name}</span>
-      </div>
-    {/if}
-  </div>
-  <div
-    class="block then-block"
-    class:empty={!then}
-    style="background: {then?.gradient || 'rgba(0,0,0,0.3)'}"
-  >
-    {#if then}
-      <div class="block-content">
-        <span class="block-label">THEN</span>
-        <span class="block-icon">{then.icon}</span>
-        <span class="block-name">{then.name}</span>
-      </div>
-    {/if}
-  </div>
+<div class="next-bar">
+  {#if next}
+    <div class="next-content">
+      <span class="next-label">NEXT:</span>
+      <span class="next-emoji">{next.icon}</span>
+      <span class="next-activity">{next.name}</span>
+      <span class="next-moon">🌙</span>
+    </div>
+  {:else}
+    <div class="next-content">
+      <span class="all-done">ALL DONE! 🎉</span>
+    </div>
+  {/if}
 </div>
 
 <style>
-  .next-then-bar {
-    display: flex;
-    height: 110px;
-    gap: 8px;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(10px);
+  .next-bar {
+    background: linear-gradient(180deg, #2a4a6a 0%, #1a3050 100%);
+    padding: 16px 20px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   }
 
-  .block {
-    flex: 1;
+  .next-content {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    border-radius: 20px;
+    gap: 10px;
     color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
+    flex-wrap: wrap;
   }
 
-  .block::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
-    pointer-events: none;
-  }
-
-  .block::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 50%;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.1) 0%, transparent 100%);
-    pointer-events: none;
-  }
-
-  .block-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .block-label {
-    font-size: min(3.5vw, 16px);
+  .next-label {
+    font-size: 20px;
     font-weight: 700;
-    opacity: 0.9;
     letter-spacing: 1px;
-    text-transform: uppercase;
+    opacity: 0.9;
   }
 
-  .block-icon {
-    font-size: min(10vw, 44px);
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  .next-emoji {
+    font-size: 36px;
   }
 
-  .block-name {
-    font-size: min(7vw, 32px);
+  .next-activity {
+    font-size: 32px;
     font-weight: 800;
     letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
 
-  .block.empty {
-    opacity: 0.3;
+  .next-moon {
+    font-size: 28px;
+  }
+
+  .all-done {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
 
   @media (max-height: 600px) {
-    .next-then-bar {
-      height: 85px;
+    .next-bar {
+      padding: 12px 16px;
     }
-  }
 
-  @media (orientation: landscape) {
-    .next-then-bar {
-      flex: 0 0 100%;
-      height: 90px;
+    .next-emoji,
+    .next-activity {
+      font-size: 24px;
     }
   }
 </style>

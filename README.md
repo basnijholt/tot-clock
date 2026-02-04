@@ -11,7 +11,7 @@ A beautiful, toddler-friendly visual routine timer. Features a large countdown c
 Perfect for wall-mounted tablets to help toddlers understand daily routines.
 
 <p align="center">
-  <img src="tests/screenshots/initial-state.png" alt="Tot Clock Main View" width="300"/>
+  <img src="tests/screenshots/main-view.png" alt="Tot Clock Main View" width="300"/>
   <img src="tests/screenshots/parent-panel.png" alt="Parent Controls Panel" width="300"/>
 </p>
 
@@ -30,8 +30,8 @@ Perfect for wall-mounted tablets to help toddlers understand daily routines.
 
 ## :sparkles: Features
 
-- **Beautiful UI** - Gradient backgrounds, floating animations, confetti celebrations
-- **Large analog clock** with colored countdown wedge showing time remaining
+- **Beautiful UI** - Blue gradient background with subtle glows and shadows
+- **Large analog clock** with dark wedge showing time remaining (Time Timer style)
 - **Kid-proof** - Taps only trigger harmless bounce animations
 - **Parent controls** - Hidden behind 2-second long-press in corner
 - **Schedule editor** - Add, remove, reorder activities with duration
@@ -40,10 +40,8 @@ Perfect for wall-mounted tablets to help toddlers understand daily routines.
 - **Wake lock** - Prevents screen from sleeping
 
 <p align="center">
-  <img src="tests/screenshots/activity-play.png" alt="Play Activity" width="200"/>
-  <img src="tests/screenshots/activity-dinner.png" alt="Dinner Activity" width="200"/>
-  <img src="tests/screenshots/activity-bath.png" alt="Bath Activity" width="200"/>
-  <img src="tests/screenshots/activity-story.png" alt="Story Activity" width="200"/>
+  <img src="tests/screenshots/activity-dinner.png" alt="Dinner Activity" width="280"/>
+  <img src="tests/screenshots/landscape.png" alt="Landscape Mode" width="400"/>
 </p>
 
 ## :rocket: Quick Start
@@ -157,7 +155,7 @@ bun run test:ui
 ### Test Coverage
 
 - Initial activity display with clock
-- Next/Then activity bar
+- Next activity bar
 - Parent panel long-press access
 - Play/pause functionality
 - Add time controls
@@ -166,11 +164,8 @@ bun run test:ui
 - Responsive layouts (tablet portrait, landscape)
 - Transition celebrations
 
-Screenshots are automatically captured during tests in `tests/screenshots/`.
-
 <p align="center">
-  <img src="tests/screenshots/transition-celebration.png" alt="Transition Celebration" width="300"/>
-  <img src="tests/screenshots/landscape.png" alt="Landscape Mode" width="400"/>
+  <img src="tests/screenshots/transition.png" alt="Transition Celebration" width="300"/>
 </p>
 
 ## :wrench: Tech Stack
@@ -199,7 +194,7 @@ src/
     ├── components/
     │   ├── Clock.svelte          # SVG clock with countdown wedge
     │   ├── ActivityDisplay.svelte # Large icon and name
-    │   ├── NextThenBar.svelte    # Bottom bar with upcoming activities
+    │   ├── NextThenBar.svelte    # Bottom bar with next activity
     │   ├── Transition.svelte     # Confetti celebration overlay
     │   └── ParentPanel.svelte    # Schedule editor and controls
     └── utils/

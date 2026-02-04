@@ -9,7 +9,6 @@
     timerState,
     currentActivity,
     nextActivity,
-    thenActivity,
     progress,
     tick,
     advanceToNext
@@ -25,7 +24,11 @@
   function formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  function getMinutesLeft(seconds: number): number {
+    return Math.ceil(seconds / 60);
   }
 
   function startParentTrigger(e: Event) {
@@ -105,39 +108,48 @@
   class="app"
   class:paused={$timerState.isPaused}
   class:tapped
-  style="background: {$currentActivity?.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}"
+  style="--theme-color: {$currentActivity?.color || '#4a90d9'}"
   onclick={handleTap}
   ontouchend={handleDoubleTap}
   role="application"
 >
-  <!-- Floating shapes -->
-  <div class="floating-shapes">
-    <div class="floating-shape"></div>
-    <div class="floating-shape"></div>
-    <div class="floating-shape"></div>
+  <!-- Background gradients -->
+  <div class="background">
+    <div class="bg-gradient"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+    <div class="bg-ground"></div>
   </div>
 
   <!-- Transition overlay -->
   <Transition visible={showTransition} />
 
-  <!-- Clock -->
-  <div class="clock-section">
-    <Clock
-      progress={$progress}
-      timeDisplay={formatTime($timerState.remainingSeconds)}
-      color={$currentActivity?.colorLight || '#fff'}
-    />
+  <!-- Main content -->
+  <div class="content">
+    <!-- Clock -->
+    <div class="clock-section">
+      <Clock
+        progress={$progress}
+        timeDisplay={formatTime($timerState.remainingSeconds)}
+        minutesLeft={getMinutesLeft($timerState.remainingSeconds)}
+      />
+    </div>
+
+    <!-- Activity display -->
+    <div class="activity-section">
+      {#if $currentActivity}
+        <ActivityDisplay icon={$currentActivity.icon} name={$currentActivity.name} />
+      {:else}
+        <ActivityDisplay icon="🎉" name="ALL DONE!" />
+      {/if}
+    </div>
   </div>
 
-  <!-- Activity display -->
-  {#if $currentActivity}
-    <ActivityDisplay icon={$currentActivity.icon} name={$currentActivity.name} />
-  {:else}
-    <ActivityDisplay icon="🎉" name="ALL DONE!" />
-  {/if}
-
-  <!-- Next/Then bar -->
-  <NextThenBar next={$nextActivity} then={$thenActivity} />
+  <!-- Next bar -->
+  <div class="next-bar-wrapper">
+    <NextThenBar next={$nextActivity} />
+  </div>
 
   <!-- Parent trigger zone -->
   <div
@@ -179,93 +191,96 @@
     flex-direction: column;
     position: relative;
     overflow: hidden;
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .app::before {
-    content: '';
+  /* Background layers */
+  .background {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background:
-      radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(0, 0, 0, 0.2) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 1;
+    z-index: 0;
   }
 
-  .app > :global(*) {
-    position: relative;
-    z-index: 2;
-  }
-
-  .floating-shapes {
+  .bg-gradient {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 1;
+    background: linear-gradient(180deg, #5a9bd4 0%, #4a8bc4 30%, #3a7bb4 70%, #2a6ba4 100%);
   }
 
-  .floating-shape {
+  .bg-glow {
     position: absolute;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    animation: float 20s infinite ease-in-out;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    pointer-events: none;
   }
 
-  .floating-shape:nth-child(1) {
+  .bg-glow-1 {
+    width: 400px;
+    height: 400px;
+    top: -100px;
+    left: -100px;
+  }
+
+  .bg-glow-2 {
     width: 300px;
     height: 300px;
-    top: -150px;
-    right: -100px;
-    animation-delay: 0s;
+    top: 20%;
+    right: -80px;
   }
 
-  .floating-shape:nth-child(2) {
-    width: 200px;
-    height: 200px;
-    bottom: -100px;
-    left: -50px;
-    animation-delay: -5s;
+  .bg-glow-3 {
+    width: 250px;
+    height: 250px;
+    bottom: 15%;
+    left: 10%;
   }
 
-  .floating-shape:nth-child(3) {
-    width: 150px;
-    height: 150px;
-    top: 50%;
-    right: -75px;
-    animation-delay: -10s;
+  .bg-ground {
+    position: absolute;
+    bottom: 0;
+    left: -10%;
+    right: -10%;
+    height: 35%;
+    background: radial-gradient(ellipse 120% 100% at 50% 100%, rgba(30, 60, 100, 0.4) 0%, transparent 70%);
+    pointer-events: none;
   }
 
-  @keyframes float {
-    0%,
-    100% {
-      transform: translate(0, 0) rotate(0deg);
-    }
-    25% {
-      transform: translate(-20px, 20px) rotate(5deg);
-    }
-    50% {
-      transform: translate(0, 40px) rotate(0deg);
-    }
-    75% {
-      transform: translate(20px, 20px) rotate(-5deg);
-    }
+  /* Content */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    z-index: 1;
+    padding-top: 40px;
   }
 
   .clock-section {
-    flex: 0 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 30px;
-    padding-top: 50px;
+    margin-bottom: 20px;
+  }
+
+  .activity-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .next-bar-wrapper {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
   }
 
   .parent-trigger {
@@ -314,21 +329,24 @@
 
   /* Landscape */
   @media (orientation: landscape) {
-    .app {
+    .content {
       flex-direction: row;
-      flex-wrap: wrap;
+      padding-top: 20px;
     }
 
     .clock-section {
-      flex: 0 0 40%;
-      padding: 20px;
+      flex: 0 0 45%;
+      margin-bottom: 0;
+    }
+
+    .activity-section {
+      flex: 0 0 55%;
     }
   }
 
   @media (max-height: 600px) {
-    .clock-section {
-      padding: 15px;
-      padding-top: 25px;
+    .content {
+      padding-top: 20px;
     }
   }
 </style>
