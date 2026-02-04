@@ -63,7 +63,8 @@
     // Timer loop
     const interval = setInterval(() => {
       const timesUp = tick();
-      if (timesUp) {
+      // Only trigger transition if not already showing one
+      if (timesUp && !showTransition) {
         showTransition = true;
         setTimeout(() => {
           showTransition = false;

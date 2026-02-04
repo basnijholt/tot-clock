@@ -24,7 +24,7 @@ test.describe('Activity Timer', () => {
     await expect(page.locator('.clock')).toBeVisible();
 
     // Take screenshot
-    await page.screenshot({ path: 'tests/screenshots/initial-state.png', fullPage: true });
+    await page.screenshot({ path: 'tests/screenshots/initial-state.png' });
   });
 
   test('shows next and then activities', async ({ page }) => {
@@ -55,8 +55,11 @@ test.describe('Activity Timer', () => {
     await expect(page.locator('.parent-panel')).toBeVisible();
     await expect(page.locator('.parent-header h2')).toContainText('Parent Controls');
 
+    // Wait for panel animation to complete
+    await page.waitForTimeout(500);
+
     // Take screenshot of parent panel
-    await page.screenshot({ path: 'tests/screenshots/parent-panel.png', fullPage: true });
+    await page.screenshot({ path: 'tests/screenshots/parent-panel.png' });
   });
 
   test('play/pause works', async ({ page }) => {
@@ -182,7 +185,7 @@ test.describe('Activity Timer', () => {
     await expect(page.locator('.next-then-bar')).toBeVisible();
 
     // Take tablet screenshot
-    await page.screenshot({ path: 'tests/screenshots/tablet-portrait.png', fullPage: true });
+    await page.screenshot({ path: 'tests/screenshots/tablet-portrait.png' });
   });
 
   test('landscape layout', async ({ page }) => {
@@ -194,43 +197,67 @@ test.describe('Activity Timer', () => {
     await expect(page.locator('.activity-icon')).toBeVisible();
 
     // Take landscape screenshot
-    await page.screenshot({ path: 'tests/screenshots/landscape.png', fullPage: true });
+    await page.screenshot({ path: 'tests/screenshots/landscape.png' });
   });
 });
 
 test.describe('Visual Screenshots', () => {
   test('capture all activity colors', async ({ page }) => {
-    await page.goto('/');
     await page.setViewportSize({ width: 800, height: 1280 });
+    await page.goto('/');
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
 
-    // Take screenshot of initial (PLAY - green)
-    await page.screenshot({ path: 'tests/screenshots/activity-play.png', fullPage: true });
+    // Wait for app to be ready
+    await expect(page.locator('.activity-name')).toContainText('PLAY');
 
-    // Open parent panel and skip to next activities to capture their colors
-    const trigger = page.locator('.parent-trigger');
+    // Take screenshot of initial (PLAY - green) - use clip to capture viewport only
+    await page.screenshot({ path: 'tests/screenshots/activity-play.png' });
 
-    for (const activity of ['dinner', 'bath', 'story']) {
+    // Helper to open parent panel and skip to next activity
+    const skipToNextActivity = async (expectedActivity: string) => {
+      // Open parent panel
+      const trigger = page.locator('.parent-trigger');
       await trigger.hover();
       await page.mouse.down();
       await page.waitForTimeout(2100);
       await page.mouse.up();
+      await expect(page.locator('.parent-panel')).toBeVisible();
+      await page.waitForTimeout(300);
 
+      // Start timer if paused (needed for skip to trigger transition)
+      const playBtn = page.locator('button:has-text("Play")');
+      if (await playBtn.isVisible()) {
+        await playBtn.click();
+        await page.waitForTimeout(100);
+      }
+
+      // Click Skip and close panel
       await page.click('button:has-text("Skip")');
-      await page.waitForTimeout(100); // Wait for transition
-
       await page.click('.close-btn');
-      await page.waitForTimeout(2600); // Wait for transition overlay
 
-      await page.screenshot({
-        path: `tests/screenshots/activity-${activity}.png`,
-        fullPage: true,
-      });
-    }
+      // Wait for transition overlay to appear and disappear (2.5s), plus buffer
+      await page.waitForTimeout(3500);
+
+      // Verify we're on the expected activity
+      await expect(page.locator('.activity-name')).toContainText(expectedActivity, { timeout: 5000 });
+    };
+
+    // Skip through activities
+    await skipToNextActivity('DINNER');
+    await page.screenshot({ path: 'tests/screenshots/activity-dinner.png' });
+
+    await skipToNextActivity('BATH');
+    await page.screenshot({ path: 'tests/screenshots/activity-bath.png' });
+
+    await skipToNextActivity('BRUSH TEETH');
+    await skipToNextActivity('STORY');
+    await page.screenshot({ path: 'tests/screenshots/activity-story.png' });
   });
 
   test('capture transition celebration', async ({ page }) => {
-    await page.goto('/');
     await page.setViewportSize({ width: 800, height: 1280 });
+    await page.goto('/');
 
     // Set a very short timer by manipulating localStorage
     await page.evaluate(() => {
@@ -241,7 +268,7 @@ test.describe('Visual Screenshots', () => {
           { activity: 'dinner', duration: 20, totalSeconds: 1200 },
         ],
         currentIndex: 0,
-        remainingSeconds: 1,
+        remainingSeconds: 2,
         isPaused: false,
         lastTick: Date.now(),
       };
@@ -250,10 +277,13 @@ test.describe('Visual Screenshots', () => {
 
     await page.reload();
 
-    // Wait for transition to appear
-    await page.waitForTimeout(1500);
+    // Wait for the transition overlay to appear (timer runs down then shows celebration)
+    await expect(page.locator('.transition-overlay')).toBeVisible({ timeout: 5000 });
+
+    // Wait a moment for confetti to render
+    await page.waitForTimeout(500);
 
     // Capture transition
-    await page.screenshot({ path: 'tests/screenshots/transition-celebration.png', fullPage: true });
+    await page.screenshot({ path: 'tests/screenshots/transition-celebration.png' });
   });
 });
