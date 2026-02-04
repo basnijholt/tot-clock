@@ -40,6 +40,7 @@ test.describe('Activity Timer', () => {
   });
 
   test('parent panel opens on long press', async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 1280 });
     await page.goto('/');
 
     // Long press the trigger zone
@@ -55,8 +56,8 @@ test.describe('Activity Timer', () => {
     await expect(page.locator('.parent-panel')).toBeVisible();
     await expect(page.locator('.parent-header h2')).toContainText('Parent Controls');
 
-    // Wait for panel animation to complete
-    await page.waitForTimeout(500);
+    // Wait for panel animation to complete (0.4s animation + buffer)
+    await page.waitForTimeout(800);
 
     // Take screenshot of parent panel
     await page.screenshot({ path: 'tests/screenshots/parent-panel.png' });

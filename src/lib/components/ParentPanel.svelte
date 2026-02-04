@@ -211,7 +211,7 @@
     z-index: 200;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    animation: slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   @keyframes slide-up {

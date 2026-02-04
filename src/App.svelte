@@ -153,9 +153,10 @@
     ontouchcancel={cancelParentTrigger}
   ></div>
 
-  <!-- Parent panel -->
-  <ParentPanel visible={showParentPanel} onClose={() => (showParentPanel = false)} />
 </main>
+
+<!-- Parent panel - outside main to avoid containing block issues with position:fixed -->
+<ParentPanel visible={showParentPanel} onClose={() => (showParentPanel = false)} />
 
 <style>
   :global(*) {
@@ -180,7 +181,6 @@
     flex-direction: column;
     position: relative;
     overflow: hidden;
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .app::before {
