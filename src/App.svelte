@@ -168,7 +168,7 @@
   :global(html, body) {
     height: 100%;
     overflow: hidden;
-    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Patrick Hand', cursive, -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;

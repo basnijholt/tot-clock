@@ -76,9 +76,6 @@
       <line x1="64" y1="26" x2="69" y2="36" class="tick" />
     </g>
 
-    <!-- 12 marker -->
-    <text x="110" y="48" class="clock-12">12</text>
-
     <!-- Countdown wedge -->
     <path
       d={calculateWedgePath(progress)}
@@ -142,13 +139,6 @@
   .tick.major {
     stroke: #64748b;
     stroke-width: 3;
-  }
-
-  .clock-12 {
-    font-size: 18px;
-    font-weight: 700;
-    fill: #475569;
-    text-anchor: middle;
   }
 
   .countdown-wedge {
