@@ -71,13 +71,13 @@ bun run preview
 # Build the image
 docker build -t tot-clock .
 
-# Run on port 8080
-docker run -p 8080:80 tot-clock
+# Run on port 8080 with persistent state
+docker run -p 8080:3000 -v tot-clock-data:/data tot-clock
 ```
 
 Open http://localhost:8080
 
-The Docker image uses a multi-stage build with Bun for building and nginx for serving, with optimized caching headers for static assets.
+The Docker image uses a multi-stage build with Bun for both building and serving. State is persisted to `/data` directory - mount a volume to preserve timer state across container restarts.
 
 ## :calendar: iCal Integration
 

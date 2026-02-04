@@ -1,0 +1,11 @@
+services:
+  tot-clock:
+    build: .
+    ports:
+      - "8080:3000"
+    volumes:
+      - tot-clock-data:/data
+    restart: unless-stopped
+
+volumes:
+  tot-clock-data:
