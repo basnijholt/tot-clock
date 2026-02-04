@@ -264,8 +264,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 30px;
-    padding-top: 50px;
+    padding: 20px;
+    padding-top: 25px;
   }
 
   .parent-trigger {

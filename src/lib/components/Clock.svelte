@@ -97,8 +97,8 @@
 
 <style>
   .clock-container {
-    width: min(75vw, 55vh);
-    max-width: 420px;
+    width: min(70vw, 40vh);
+    max-width: 400px;
     position: relative;
   }
 
