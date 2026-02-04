@@ -26,7 +26,6 @@ dist-ssr
 # Test artifacts
 test-results/
 playwright-report/
-tests/screenshots/
 
 # Bun
 bun.lockb
