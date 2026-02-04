@@ -203,11 +203,14 @@
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
     height: 100%;
     background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
     z-index: 200;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     animation: slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -264,6 +267,7 @@
 
   .parent-content {
     padding: 24px;
+    padding-bottom: 100px;
     max-width: 600px;
     margin: 0 auto;
   }
@@ -374,8 +378,6 @@
   }
 
   .schedule-list {
-    max-height: 300px;
-    overflow-y: auto;
     margin-bottom: 16px;
     border-radius: 12px;
     background: rgba(0, 0, 0, 0.2);
