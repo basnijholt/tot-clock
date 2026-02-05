@@ -25,13 +25,72 @@ const defaultSettings: Settings = {
   lastIcalFetch: null
 };
 
-// Load from localStorage
-function loadState(): TimerState {
+// Server-side persistence
+async function loadStateFromServer(): Promise<TimerState | null> {
+  try {
+    const res = await fetch('/api/state');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Object.keys(data).length > 0) {
+        // Account for elapsed time if was running
+        if (!data.isPaused && data.lastTick) {
+          const elapsed = Math.floor((Date.now() - data.lastTick) / 1000);
+          data.remainingSeconds = Math.max(0, data.remainingSeconds - elapsed);
+        }
+        return { ...defaultState, ...data };
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load state from server:', e);
+  }
+  return null;
+}
+
+async function loadSettingsFromServer(): Promise<Settings | null> {
+  try {
+    const res = await fetch('/api/settings');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Object.keys(data).length > 0) {
+        return { ...defaultSettings, ...data };
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load settings from server:', e);
+  }
+  return null;
+}
+
+async function saveStateToServer(state: TimerState): Promise<void> {
+  try {
+    await fetch('/api/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+  } catch (e) {
+    console.warn('Failed to save state to server:', e);
+  }
+}
+
+async function saveSettingsToServer(settings: Settings): Promise<void> {
+  try {
+    await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings)
+    });
+  } catch (e) {
+    console.warn('Failed to save settings to server:', e);
+  }
+}
+
+// Load from localStorage as fallback
+function loadStateFromStorage(): TimerState {
   try {
     const saved = localStorage.getItem(STATE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Account for elapsed time if was running
       if (!parsed.isPaused && parsed.lastTick) {
         const elapsed = Math.floor((Date.now() - parsed.lastTick) / 1000);
         parsed.remainingSeconds = Math.max(0, parsed.remainingSeconds - elapsed);
@@ -39,43 +98,77 @@ function loadState(): TimerState {
       return { ...defaultState, ...parsed };
     }
   } catch (e) {
-    console.warn('Failed to load state:', e);
+    console.warn('Failed to load state from storage:', e);
   }
   return defaultState;
 }
 
-function loadSettings(): Settings {
+function loadSettingsFromStorage(): Settings {
   try {
     const saved = localStorage.getItem(SETTINGS_KEY);
     if (saved) {
       return { ...defaultSettings, ...JSON.parse(saved) };
     }
   } catch (e) {
-    console.warn('Failed to load settings:', e);
+    console.warn('Failed to load settings from storage:', e);
   }
   return defaultSettings;
 }
 
-// Create stores
-export const timerState = writable<TimerState>(loadState());
-export const settings = writable<Settings>(loadSettings());
+// Create stores with localStorage fallback initially
+export const timerState = writable<TimerState>(loadStateFromStorage());
+export const settings = writable<Settings>(loadSettingsFromStorage());
 
-// Save to localStorage on changes
+// Load from server and update stores (async)
+export async function initializeFromServer(): Promise<void> {
+  const [serverState, serverSettings] = await Promise.all([
+    loadStateFromServer(),
+    loadSettingsFromServer()
+  ]);
+
+  if (serverState) {
+    timerState.set(serverState);
+  }
+  if (serverSettings) {
+    settings.set(serverSettings);
+  }
+}
+
+// Debounce server saves to avoid too many requests
+let stateSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+let settingsSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// Save to both localStorage and server on changes
 timerState.subscribe(state => {
   state.lastTick = Date.now();
+
+  // Save to localStorage immediately
   try {
     localStorage.setItem(STATE_KEY, JSON.stringify(state));
   } catch (e) {
-    console.warn('Failed to save state:', e);
+    console.warn('Failed to save state to storage:', e);
   }
+
+  // Debounce server save
+  if (stateSaveTimeout) clearTimeout(stateSaveTimeout);
+  stateSaveTimeout = setTimeout(() => {
+    saveStateToServer(state);
+  }, 1000);
 });
 
 settings.subscribe(s => {
+  // Save to localStorage immediately
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
   } catch (e) {
-    console.warn('Failed to save settings:', e);
+    console.warn('Failed to save settings to storage:', e);
   }
+
+  // Debounce server save
+  if (settingsSaveTimeout) clearTimeout(settingsSaveTimeout);
+  settingsSaveTimeout = setTimeout(() => {
+    saveSettingsToServer(s);
+  }, 1000);
 });
 
 // Derived stores

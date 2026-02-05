@@ -15,27 +15,25 @@ COPY . .
 # Build the app
 RUN bun run build
 
-# Production stage - serve with nginx
-FROM nginx:alpine
+# Production stage - serve with Bun for API support
+FROM oven/bun:1-slim
 
-# Copy built assets from builder
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-# Copy nginx config for SPA routing
-RUN echo 'server { \
-    listen 80; \
-    server_name localhost; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ { \
-        expires 1y; \
-        add_header Cache-Control "public, immutable"; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Copy built assets and server
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server.ts ./
+COPY --from=builder /app/package.json ./
 
-EXPOSE 80
+# Create data directory for state persistence
+RUN mkdir -p /data
 
-CMD ["nginx", "-g", "daemon off;"]
+# Expose port
+EXPOSE 3000
+
+# Environment variables
+ENV PORT=3000
+ENV DATA_DIR=/data
+
+# Run the server
+CMD ["bun", "run", "server.ts"]
