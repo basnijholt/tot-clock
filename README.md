@@ -85,31 +85,53 @@ The Docker image uses a multi-stage build with Bun for both building and serving
 2. Paste your iCal URL (Google Calendar, Apple Calendar, etc.)
 3. Click "Sync Calendar"
 
-The app matches calendar event titles to activities:
+### How it works
 
-| Event Title | Matched Activity |
-|-------------|------------------|
-| "Dinner" | 🍽️ DINNER |
-| "Bath time" | 🛁 BATH |
-| "Play" | 🧸 PLAY |
-| "Story time" | 📚 STORY |
+- **Fetches today's events** from your calendar (sorted by start time)
+- **Matches event titles** to activities using keywords (see [Activities](#art-activities) table)
+- **Duration** comes from the calendar event length (end time - start time)
+- **Unmatched events** are skipped (if title doesn't contain any known keywords)
+
+### Example
+
+If your Google Calendar has:
+
+| Time | Event Title |
+|------|-------------|
+| 5:00 PM - 5:30 PM | Dinner time |
+| 5:30 PM - 6:00 PM | Bath |
+| 6:00 PM - 6:20 PM | Story time |
+
+The app creates this schedule:
+
+1. 🍽️ Dinner - 30 min
+2. 🛁 Bath - 30 min
+3. 📚 Story - 20 min
 
 ## :art: Activities
 
 Pre-configured activities (edit `src/lib/activities.ts`):
 
-| Activity | Icon | Color | Keywords matched |
-|----------|------|-------|------------------|
-| play | 🧸 | Green | play, playtime, toys |
-| dinner | 🍽️ | Orange | dinner, supper |
-| bath | 🛁 | Blue | bath, wash, shower |
-| story | 📚 | Purple | story, book, reading |
-| sleep | 🌙 | Indigo | sleep, bed, bedtime |
-| breakfast | 🥣 | Yellow | breakfast |
-| outside | 🌳 | Emerald | outside, park, garden |
-| tv | 📺 | Slate | tv, movie, cartoon |
-| teeth | 🦷 | Cyan | teeth, brush, dental |
-| ...and more! |
+| Activity | Icon | Keywords matched |
+|----------|------|------------------|
+| play | 🧸 | play, playtime, toys, game |
+| dinner | 🍽️ | dinner, supper, evening meal |
+| lunch | 🍽️ | lunch, midday meal |
+| breakfast | 🥣 | breakfast, morning meal |
+| bath | 🛁 | bath, bathing, wash, shower |
+| story | 📚 | story, stories, book, reading time, bedtime story |
+| sleep | 🌙 | sleep, bed, bedtime, night night, goodnight |
+| snack | 🍎 | snack, treat, fruit |
+| tv | 📺 | tv, television, screen, movie, show, cartoon |
+| teeth | 🦷 | teeth, brush, dental |
+| dress | 👕 | dress, clothes, getting dressed, outfit |
+| outside | 🌳 | outside, outdoor, garden, park, playground |
+| quiet | 🧘 | quiet, calm, rest, relax |
+| music | 🎵 | music, song, singing, dance |
+| nap | 😴 | nap, rest, quiet time |
+| potty | 🚽 | potty, toilet, bathroom |
+| clean | 🧹 | clean, tidy, cleanup |
+| reading | 📖 | read, reading, books |
 
 ## :lock: Parent Controls
 
