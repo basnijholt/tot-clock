@@ -44,13 +44,10 @@
         <stop offset="100%" style="stop-color:#000000;stop-opacity:0" />
       </radialGradient>
 
-      <filter id="clockShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.25" />
-      </filter>
     </defs>
 
     <!-- Outer ring -->
-    <circle cx="110" cy="110" r="105" fill="#ffffff" filter="url(#clockShadow)" />
+    <circle cx="110" cy="110" r="105" fill="#ffffff" />
     <circle cx="110" cy="110" r="105" class="clock-rim" />
 
     <!-- Clock face -->

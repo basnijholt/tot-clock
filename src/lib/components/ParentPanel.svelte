@@ -11,6 +11,7 @@
     updateSettings,
     setSchedule
   } from '../stores/timer';
+  import { get } from 'svelte/store';
   import { activities, defaultRoutines, getActivity } from '../activities';
   import type { ScheduleItem } from '../types';
 
@@ -30,7 +31,7 @@
 
   $effect(() => {
     if (visible) {
-      editSchedule = [...$timerState.schedule];
+      editSchedule = [...get(timerState).schedule];
     }
   });
 
