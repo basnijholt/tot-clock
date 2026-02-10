@@ -1,0 +1,19 @@
+name: tot-clock
+services:
+  tot-clock:
+    build: .
+    container_name: tot-clock
+    networks:
+      - mynetwork
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tot-clock.rule=Host(`tot-clock.${DOMAIN}`)
+      - traefik.http.routers.tot-clock.entrypoints=websecure
+      - traefik.http.routers.tot-clock-local.rule=Host(`tot-clock.local`)
+      - traefik.http.routers.tot-clock-local.entrypoints=web
+      - traefik.http.services.tot-clock.loadbalancer.server.port=3000
+
+networks:
+  mynetwork:
+    external: true
