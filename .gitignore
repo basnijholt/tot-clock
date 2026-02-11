@@ -29,3 +29,6 @@ playwright-report/
 
 # Bun
 bun.lockb
+
+# Environment
+.env
