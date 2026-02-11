@@ -179,19 +179,19 @@ export const defaultRoutines: Record<string, Routine> = {
     name: 'Morning',
     schedule: [
       { activity: 'breakfast', duration: 20 },
-      { activity: 'teeth', duration: 3 },
       { activity: 'dress', duration: 10 },
+      { activity: 'teeth', duration: 3 },
       { activity: 'play', duration: 30 }
     ]
   },
   evening: {
     name: 'Evening',
     schedule: [
-      { activity: 'dinner', duration: 25 },
       { activity: 'play', duration: 20 },
+      { activity: 'dinner', duration: 25 },
       { activity: 'bath', duration: 15 },
       { activity: 'teeth', duration: 3 },
-      { activity: 'story', duration: 15 },
+      { activity: 'story', duration: 10 },
       { activity: 'sleep', duration: 1 }
     ]
   }
