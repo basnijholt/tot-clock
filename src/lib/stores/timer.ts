@@ -15,7 +15,7 @@ const defaultState: TimerState = {
   })),
   currentIndex: 0,
   remainingSeconds: defaultRoutines.normal.schedule[0].duration * 60,
-  isPaused: true,
+  isPaused: false,
   lastTick: null
 };
 
@@ -212,7 +212,7 @@ export function loadRoutine(routineName: string) {
     })),
     currentIndex: 0,
     remainingSeconds: routine.schedule[0].duration * 60,
-    isPaused: true
+    isPaused: false
   }));
 }
 
@@ -226,8 +226,43 @@ export function setSchedule(schedule: ScheduleItem[]) {
     })),
     currentIndex: 0,
     remainingSeconds: schedule[0]?.duration * 60 || 0,
-    isPaused: true
+    isPaused: false
   }));
+}
+
+export function updateScheduleLive(newSchedule: ScheduleItem[], newCurrentIndex: number) {
+  timerState.update(state => {
+    const schedule = newSchedule.map(item => ({
+      ...item,
+      totalSeconds: item.duration * 60
+    }));
+
+    if (schedule.length === 0) {
+      return { ...state, schedule, currentIndex: 0, remainingSeconds: 0, currentRoutine: 'custom' };
+    }
+
+    const clampedIndex = Math.min(Math.max(0, newCurrentIndex), schedule.length - 1);
+    const newItem = schedule[clampedIndex];
+    const oldItem = state.schedule[state.currentIndex];
+    const newTotal = newItem.totalSeconds || newItem.duration * 60;
+
+    let remainingSeconds: number;
+    if (oldItem && newItem.activity === oldItem.activity) {
+      // Same activity at this index — preserve remaining time (capped to new total)
+      remainingSeconds = Math.min(state.remainingSeconds, newTotal);
+    } else {
+      // Different activity — start from full duration
+      remainingSeconds = newTotal;
+    }
+
+    return {
+      ...state,
+      schedule,
+      currentIndex: clampedIndex,
+      remainingSeconds,
+      currentRoutine: 'custom'
+    };
+  });
 }
 
 export function togglePause() {
@@ -267,7 +302,7 @@ export function restart() {
     ...state,
     currentIndex: 0,
     remainingSeconds: state.schedule[0]?.totalSeconds || 0,
-    isPaused: true
+    isPaused: false
   }));
 }
 

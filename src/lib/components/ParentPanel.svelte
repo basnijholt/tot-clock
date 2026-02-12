@@ -9,7 +9,8 @@
     restart,
     syncWithIcal,
     updateSettings,
-    setSchedule
+    setSchedule,
+    updateScheduleLive
   } from '../stores/timer';
   import { get } from 'svelte/store';
   import { activities, defaultRoutines, getActivity } from '../activities';
@@ -47,42 +48,89 @@
     syncing = false;
   }
 
-  function handleLoadRoutine(e: Event) {
-    const select = e.target as HTMLSelectElement;
-    loadRoutine(select.value);
+  function handleLoadRoutine(key: string) {
+    loadRoutine(key);
     editSchedule = [...$timerState.schedule];
+  }
+
+  function pushSchedule(currentIndex?: number) {
+    if (editSchedule.length > 0) {
+      updateScheduleLive(editSchedule, currentIndex ?? get(timerState).currentIndex);
+    }
   }
 
   function addActivity(activityId: string) {
     editSchedule = [...editSchedule, { activity: activityId, duration: 10, totalSeconds: 600 }];
+    pushSchedule();
   }
 
   function removeActivity(index: number) {
+    let currentIndex = get(timerState).currentIndex;
     editSchedule = editSchedule.filter((_, i) => i !== index);
+    if (editSchedule.length === 0) return;
+    if (index < currentIndex) {
+      currentIndex--;
+    } else if (currentIndex >= editSchedule.length) {
+      currentIndex = editSchedule.length - 1;
+    }
+    pushSchedule(currentIndex);
   }
 
   function updateDuration(index: number, duration: number) {
     editSchedule = editSchedule.map((item, i) =>
       i === index ? { ...item, duration, totalSeconds: duration * 60 } : item
     );
-  }
-
-  function moveActivity(index: number, direction: -1 | 1) {
-    const newIndex = index + direction;
-    if (newIndex < 0 || newIndex >= editSchedule.length) return;
-
-    const newSchedule = [...editSchedule];
-    [newSchedule[index], newSchedule[newIndex]] = [newSchedule[newIndex], newSchedule[index]];
-    editSchedule = newSchedule;
-  }
-
-  function applySchedule() {
-    if (editSchedule.length > 0) {
-      setSchedule(editSchedule);
-    }
+    pushSchedule();
   }
 
   const activityList = Object.values(activities);
+
+  // Drag-to-reorder state
+  let draggingIndex = $state<number | null>(null);
+  let dragStartY = 0;
+  let dragItemHeight = 0;
+
+  function handlePointerDown(index: number, e: PointerEvent) {
+    draggingIndex = index;
+    dragStartY = e.clientY;
+    const item = (e.target as HTMLElement).closest('.schedule-item');
+    if (item) {
+      dragItemHeight = item.getBoundingClientRect().height + 8;
+    }
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }
+
+  function handlePointerMove(e: PointerEvent) {
+    if (draggingIndex === null) return;
+    e.preventDefault();
+
+    const deltaY = e.clientY - dragStartY;
+
+    if (Math.abs(deltaY) > dragItemHeight / 2) {
+      const direction: -1 | 1 = deltaY > 0 ? 1 : -1;
+      const newIndex = draggingIndex + direction;
+      if (newIndex >= 0 && newIndex < editSchedule.length) {
+        // Track currentIndex through the swap
+        let currentIndex = get(timerState).currentIndex;
+        if (currentIndex === draggingIndex) {
+          currentIndex = newIndex;
+        } else if (currentIndex === newIndex) {
+          currentIndex = draggingIndex;
+        }
+
+        const newSchedule = [...editSchedule];
+        [newSchedule[draggingIndex], newSchedule[newIndex]] = [newSchedule[newIndex], newSchedule[draggingIndex]];
+        editSchedule = newSchedule;
+        draggingIndex = newIndex;
+        dragStartY += direction * dragItemHeight;
+        pushSchedule(currentIndex);
+      }
+    }
+  }
+
+  function handlePointerUp() {
+    draggingIndex = null;
+  }
 </script>
 
 {#if visible}
@@ -133,14 +181,17 @@
       <!-- Routine Selection -->
       <div class="control-group">
         <h3>Load Routine</h3>
-        <select class="select" onchange={handleLoadRoutine} value={$timerState.currentRoutine}>
+        <div class="routine-buttons">
           {#each Object.entries(defaultRoutines) as [key, routine]}
-            <option value={key}>{routine.name}</option>
+            <button
+              class="routine-btn"
+              class:active={$timerState.currentRoutine === key}
+              onclick={() => handleLoadRoutine(key)}
+            >
+              {routine.name}
+            </button>
           {/each}
-          {#if $timerState.currentRoutine === 'custom'}
-            <option value="custom">Custom</option>
-          {/if}
-        </select>
+        </div>
       </div>
 
       <!-- Schedule Editor -->
@@ -149,7 +200,14 @@
         <div class="schedule-list">
           {#each editSchedule as item, index}
             {@const activity = getActivity(item.activity)}
-            <div class="schedule-item" class:current={index === $timerState.currentIndex}>
+            <div class="schedule-item" class:current={index === $timerState.currentIndex} class:dragging={draggingIndex === index}>
+              <button
+                class="drag-handle"
+                onpointerdown={(e) => handlePointerDown(index, e)}
+                onpointermove={handlePointerMove}
+                onpointerup={handlePointerUp}
+                onpointercancel={handlePointerUp}
+              >⠿</button>
               <span class="item-icon">{activity.icon}</span>
               <span class="item-name">{activity.name}</span>
               <input
@@ -161,11 +219,7 @@
                 onchange={(e) => updateDuration(index, parseInt((e.target as HTMLInputElement).value) || 1)}
               />
               <span class="duration-label">min</span>
-              <div class="item-actions">
-                <button class="icon-btn" onclick={() => moveActivity(index, -1)} disabled={index === 0}>↑</button>
-                <button class="icon-btn" onclick={() => moveActivity(index, 1)} disabled={index === editSchedule.length - 1}>↓</button>
-                <button class="icon-btn danger" onclick={() => removeActivity(index)}>✕</button>
-              </div>
+              <button class="icon-btn danger" onclick={() => removeActivity(index)}>✕</button>
             </div>
           {/each}
         </div>
@@ -188,7 +242,6 @@
           </button>
         </div>
 
-        <button class="ctrl-btn" onclick={applySchedule}>💾 Apply Schedule</button>
       </div>
 
       <!-- Restart -->
@@ -433,11 +486,6 @@
     font-size: 12px;
   }
 
-  .item-actions {
-    display: flex;
-    gap: 4px;
-  }
-
   .icon-btn {
     width: 32px;
     height: 32px;
@@ -461,6 +509,62 @@
 
   .icon-btn.danger:hover {
     background: rgba(239, 68, 68, 0.5);
+  }
+
+  .routine-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .routine-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 14px 8px;
+    font-size: 14px;
+    font-weight: 700;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .routine-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .routine-btn.active {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    border-color: #22c55e;
+    color: white;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+  }
+
+  .drag-handle {
+    cursor: grab;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.4);
+    background: none;
+    border: none;
+    padding: 4px 2px;
+    touch-action: none;
+    user-select: none;
+    line-height: 1;
+  }
+
+  .drag-handle:active {
+    cursor: grabbing;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .schedule-item.dragging {
+    background: rgba(74, 222, 128, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    position: relative;
   }
 
   .add-activity {
