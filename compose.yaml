@@ -9,8 +9,6 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.tot-clock.rule=Host(`tot-clock.${DOMAIN}`)
-      - traefik.http.routers.tot-clock.middlewares=local-ips-only@file
-      - traefik.http.routers.tot-clock.entrypoints=websecure
       - traefik.http.routers.tot-clock-local.rule=Host(`tot-clock.local`)
       - traefik.http.routers.tot-clock-local.entrypoints=web
       - traefik.http.services.tot-clock.loadbalancer.server.port=3000
